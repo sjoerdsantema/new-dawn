@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Parent Stack with nested stacks for networking, ec2, app and database
+Parameters:
+  DTAP:
+    Type: String
+    Default: "Acceptance"
+    AllowedValues:
+      - Development
+      - Testing
+      - Acceptance
+      - Production
+  KeyName:
+    Type: String
+    Default: trainingdays
+  ParDatabasename:
+    Type: String
+    Default: mydatabase
+  Sizing:
+    Type: String
+    Default: "Small"
+    AllowedValues:
+     - Small
+     - Medium
+     - Large
+    Description: Select sizing
+  Databaseuser:
+    Type: String
+    Default: mydatabase
+  Databasepassword:
+    Type: String
+    Default: mydatabase
+  Ami:
+    Type: String
+    Default: ami-40142d25
+Resources:
+ SkeletonStack:
+  Type: AWS::CloudFormation::Stack
+  Properties:
+    TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/skeleton.yaml
+    TimeoutInMinutes: 60
+ AppStack:
+  Type: AWS::CloudFormation::Stack
+  Properties:
+    TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/app.yaml
+    Parameters:
+      BastionSubnet:
+        !GetAtt 'SkeletonStack.Outputs.SBastionSubnet'
+      BastionHostSecurityGroup:
+        !GetAtt 'SkeletonStack.Outputs.SBastionHostSecurityGroup'
+      LoadBalancerSecurityGroup:
+        !GetAtt 'SkeletonStack.Outputs.SLoadBalancerSecurityGroup'
+      AutoScalingSubnet:
+        !GetAtt 'SkeletonStack.Outputs.SAutoScalingSubnet'
+      AutoScaling2Subnet:
+        !GetAtt 'SkeletonStack.Outputs.SAutoScaling2Subnet'
+      AutoScalingSecurityGroup:
+        !GetAtt 'SkeletonStack.Outputs.SAutoScalingSecurityGroup'
+      KeyName: !Ref KeyName
+      Sizing: !Ref Sizing
+      Ami: !Ref Ami
+    TimeoutInMinutes: 60
+ RdsStack:
+  Type: AWS::CloudFormation::Stack
+  Properties:
+    TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/rdsstack.yaml
+    Parameters:
+     Sizing: !Ref Sizing
+     DatabaseSubnet:
+      !GetAtt 'SkeletonStack.Outputs.SDatabaseSubnet'
+     Database2Subnet:
+      !GetAtt 'SkeletonStack.Outputs.SDatabase2Subnet'
+     ParDatabasename: !Ref ParDatabasename
+     Databaseuser: !Ref Databaseuser
+     Databasepassword: !Ref Databasepassword
+     DatabaseSecurityGroup:
+      !GetAtt 'SkeletonStack.Outputs.SDatabaseSecurityGroup'
+    TimeoutInMinutes: 60
+Outputs:
+  SVPC:
+   Description: VpcId SkeletonStack
+   Value:
+    !GetAtt 'SkeletonStack.Outputs.SVPC'
+  SInternetGateway:
+   Description: InternetGateway SkeletonStack
+   Value:
+    !GetAtt 'SkeletonStack.Outputs.SInternetGateway'
+  SBastionSubnet:
+   Description: Bastion subnet SkeletonStack
+   Value:
+    !GetAtt 'SkeletonStack.Outputs.SBastionSubnet'
+  SAutoScaling2Subnet:
+   Description: Autoscaling 2 subnet SkeletonStack
+   Value:
+    !GetAtt 'SkeletonStack.Outputs.SAutoScaling2Subnet'
+  SDatabaseSubnet:
+   Description: Database subnet SkeletonStack
+   Value:
+    !GetAtt 'SkeletonStack.Outputs.SDatabaseSubnet'
+  SDatabase2Subnet:
+   Description: Database subnet SkeletonStack
+   Value:
+    !GetAtt 'SkeletonStack.Outputs.SDatabase2Subnet'
+  SBastionHostSecurityGroup:
+   Description: Bastion security group SkeletonStack
+   Value:
+    !GetAtt 'SkeletonStack.Outputs.SBastionHostSecurityGroup'
+  SLoadBalancerSecurityGroup:
+   Description: Load balancer security group SkeletonStack
+   Value:
+    !GetAtt 'SkeletonStack.Outputs.SLoadBalancerSecurityGroup'
+  SAutoScalingSecurityGroup:
+   Description: ASG security group SkeletonStack
+   Value:
+    !GetAtt 'SkeletonStack.Outputs.SAutoScalingSecurityGroup'
+  SDatabaseSecurityGroup:
+    Description: Database security group SkeletonStack
+    Value:
+     !GetAtt 'SkeletonStack.Outputs.SDatabaseSecurityGroup'
+  SNAT:
+    Description: NAT in SkeletonStack
+    Value:
+     !GetAtt 'SkeletonStack.Outputs.SNatGateway'
+  RdsDB:
+    Description: Endpoint of RDS
+    Value:
+     !GetAtt 'RdsStack.Outputs.RdsDb'
+  LoadBalancerEndpoint:
+    Description: Endpoint of the load Balancer
+    Value:
+      !GetAtt 'AppStack.Outputs.LoadBalancer'
