@@ -1,5 +1,5 @@
 # nestedstacks
-Set of 1 parent stack with three child stacks
+Set of 1 parent stack with 3 nested stacks (rds, skeleton, app/ec2)
 
 This template creates:
 - 1 VPC
