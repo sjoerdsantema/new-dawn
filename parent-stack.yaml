@@ -53,6 +53,10 @@ Resources:
         !GetAtt 'SkeletonStack.Outputs.SAutoScalingSubnet'
       AutoScaling2Subnet:
         !GetAtt 'SkeletonStack.Outputs.SAutoScaling2Subnet'
+      AutoScalingPubSubnet:
+        !GetAtt 'SkeletonStack.Outputs.SAutoScalingPubSubnet'
+      AutoScalingPub2Subnet:
+        !GetAtt 'SkeletonStack.Outputs.SAutoScalingPub2Subnet'
       AutoScalingSecurityGroup:
         !GetAtt 'SkeletonStack.Outputs.SAutoScalingSecurityGroup'
       KeyName: !Ref KeyName

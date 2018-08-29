@@ -35,6 +35,32 @@ Resources:
           Value: Bastion Subnet
       CidrBlock: 10.0.0.0/24
       MapPublicIpOnLaunch: true
+  AutoScalingPubSubnet: #create public autoscaling 1 subnet
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+          Fn::Select:
+            - 0
+            - Fn::GetAZs: ""
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Public Autoscaling 1 Subnet
+      CidrBlock: 10.0.11.0/24
+      MapPublicIpOnLaunch: true
+  AutoScalingPub2Subnet: #create public autoscaling 2 subnet
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+          Fn::Select:
+            - 1
+            - Fn::GetAZs: ""
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Public Autoscaling 2 Subnet
+      CidrBlock: 10.0.12.0/24
+      MapPublicIpOnLaunch: true
   AutoScalingSubnet: #create ASG1 subnet
     Type: AWS::EC2::Subnet
     Properties:
@@ -45,7 +71,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: ASG 1 Subnet
+          Value: Private Autoscaling 1 Subnet
       CidrBlock: 10.0.2.0/24
       MapPublicIpOnLaunch: false
   AutoScaling2Subnet: #create ASG2 subnet
@@ -58,7 +84,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: ASG 2 Subnet
+          Value: Private Autoscaling 2 Subnet
       CidrBlock: 10.0.8.0/24
       MapPublicIpOnLaunch: false
   DatabaseSubnet: #create DB1 subnet
@@ -148,64 +174,59 @@ Resources:
      VpcId: !Ref VPC
      Tags:
       - Key: Name
-        Value: ASG Security Group
+        Value: AutoScaling Security Group
+     SecurityGroupEgress:
+      - IpProtocol: -1
+        CidrIp: 0.0.0.0/0
   #ingress to security groups
-  AutoScalingIngress: #ingress seperate to prevent dependency
-   Type: AWS::EC2::SecurityGroupIngress
-   Properties:
-     GroupId: !Ref AutoScalingSecurityGroup
-     IpProtocol: tcp
-     ToPort: 80
-     FromPort: 80
-     SourceSecurityGroupId: !Ref BastionHostSecurityGroup
   AutoScaling2Ingress: #ingress seperate to prevent dependency
    Type: AWS::EC2::SecurityGroupIngress
    Properties:
      GroupId: !Ref AutoScalingSecurityGroup
      IpProtocol: tcp
-     ToPort: 22
-     FromPort: 22
+     ToPort: '22'
+     FromPort: '22'
      SourceSecurityGroupId: !Ref BastionHostSecurityGroup
   AutoScaling3Ingress: #ingress seperate to prevent dependency
    Type: AWS::EC2::SecurityGroupIngress
    Properties:
      GroupId: !Ref AutoScalingSecurityGroup
      IpProtocol: tcp
-     ToPort: 80
-     FromPort: 80
+     ToPort: '80'
+     FromPort: '80'
      SourceSecurityGroupId: !Ref DatabaseSecurityGroup
   AutoScaling4Ingress: #ingress seperate to prevent dependency
    Type: AWS::EC2::SecurityGroupIngress
    Properties:
      GroupId: !Ref AutoScalingSecurityGroup
      IpProtocol: tcp
-     ToPort: 80
-     FromPort: 80
+     ToPort: '80'
+     FromPort: '80'
      SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
   AutoScaling5Ingress: #ingress seperate to prevent dependency
-     Type: AWS::EC2::SecurityGroupIngress
-     Properties:
-       GroupId: !Ref AutoScalingSecurityGroup
-       IpProtocol: tcp
-       ToPort: 80
-       FromPort: 80
-       SourceSecurityGroupId: !Ref BastionHostSecurityGroup
+   Type: AWS::EC2::SecurityGroupIngress
+   Properties:
+     GroupId: !Ref AutoScalingSecurityGroup
+     IpProtocol: tcp
+     ToPort: '443'
+     FromPort: '443'
+     SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
   DatabaseIngress: #ingress seperate to prevent dependency
    Type: AWS::EC2::SecurityGroupIngress
    Properties:
      GroupId: !Ref DatabaseSecurityGroup
      IpProtocol: tcp
-     ToPort: 3306
-     FromPort: 3306
+     ToPort: '3306'
+     FromPort: '3306'
      SourceSecurityGroupId: !Ref AutoScalingSecurityGroup
   #create route tables
-  BastionRouteTable: #create bastion route table
+  PublicRouteTable: #create bastion/public route table
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: Bastion Route Table
+          Value: Public Route Table
   NatRouteTable: #create nat route table
     Type: AWS::EC2::RouteTable
     Properties:
@@ -219,7 +240,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: ASG Route Table
+          Value: AutoScaling Route Table
   DatabaseRouteTable: #create database route table
     Type: AWS::EC2::RouteTable
     Properties:
@@ -234,15 +255,15 @@ Resources:
     Properties:
      DestinationCidrBlock: 0.0.0.0/0
      GatewayId: !Ref InternetGateway
-     RouteTableId: !Ref NatRouteTable
-  BastionHostInternetRoute: #create route to IGW
+     RouteTableId: !Ref NatRouteTable #create route for NAT to IGW
+  PublicInternetRoute: #create route to IGW
     Type: AWS::EC2::Route
     DependsOn: InternetGateway
     Properties:
-      RouteTableId: !Ref BastionRouteTable
+      RouteTableId: !Ref PublicRouteTable
       GatewayId: !Ref InternetGateway
       DestinationCidrBlock: 0.0.0.0/0
-  AutoScalingRoute: #create route to NAT
+  AutoScalingRoute: #create route from ASG to NAT for webservers to have internet connection
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !Ref AutoScalingRouteTable
@@ -256,8 +277,18 @@ Resources:
   BastionHostSubnetRouteTableAssociation: #associate route table to subnet
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref BastionRouteTable
+      RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref BastionSubnet
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref AutoScalingPubSubnet
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref AutoScalingPub2Subnet
   NatSubnetRouteTableAssociation: #associate nat route table to subnet
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -278,7 +309,7 @@ Resources:
     Type: AWS::EC2::EIP
     Properties:
       Domain: vpc #spawn an elastic ip
-  NatGateway: #create the NAT gateway in the bastion subnet
+  NatGateway: #create the NAT gateway in a seperate subnet
       Type: AWS::EC2::NatGateway
       DependsOn: NatEIP
       Properties:
@@ -297,6 +328,12 @@ Outputs:
   SBastionSubnet:
     Description: Bastion subnet created in skeleton
     Value: !Ref BastionSubnet
+  SAutoScalingPubSubnet:
+    Description: Public subnet 1st az created in skeleton
+    Value: !Ref AutoScalingPubSubnet
+  SAutoScalingPub2Subnet:
+    Description: Public subnet 2nd az created in skeleton
+    Value: !Ref AutoScalingPub2Subnet
   SAutoScalingSubnet:
     Description: Autoscaling subnet 1st az created in skeleton
     Value: !Ref AutoScalingSubnet
