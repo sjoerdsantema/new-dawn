@@ -14,10 +14,16 @@ Parameters:
     Description: Load Balancer Security Group
     Type: String
   AutoScalingSubnet:
-    Description: ASG Subnet
+    Description: AutoScaling Subnet
+    Type: String
+  AutoScalingPubSubnet:
+    Description: Public Autoscaling Subnet
+    Type: String
+  AutoScalingPub2Subnet:
+    Description: Public 2nd Autoscaling Subnet
     Type: String
   AutoScaling2Subnet:
-    Description: ASG 2 Subnet
+    Description: AutoScaling 2 Subnet
     Type: String
   KeyName:
     Description: Keyname to use
@@ -46,15 +52,18 @@ Resources:
       CrossZone: true
       Scheme: internet-facing
       Listeners:
-        - InstancePort: 80
-          InstanceProtocol: http
-          LoadBalancerPort: 80
+        - InstancePort: '80'
+          LoadBalancerPort: '80'
           Protocol: HTTP
       SecurityGroups:
         - !Ref LoadBalancerSecurityGroup
       Subnets:
-        - !Ref AutoScalingSubnet
-        - !Ref AutoScaling2Subnet
+        - !Ref AutoScalingPubSubnet
+        - !Ref AutoScalingPub2Subnet
+      LoadBalancerName: Loadbalancer
+      Tags:
+        - Key: Name
+          Value: Classic Internet-Facing Loadbalancer
   BastionHostLaunchConfig: #create launch config for bastion host
     Type: "AWS::AutoScaling::LaunchConfiguration"
     Properties:
@@ -75,6 +84,10 @@ Resources:
       MaxSize: '1'
       VPCZoneIdentifier:
         - !Ref BastionSubnet
+      Tags:
+        - Key: Name
+          Value: Bastion host
+          PropagateAtLaunch: true
   AsgLaunchConfiguration: #create asg launch config
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -112,7 +125,7 @@ Resources:
            AZ=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
            INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
            PRIVATE_IP=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
-           INFORMATION_HTML="<html><header><title>Wowie het is gelukt!</title></header><body><table><tr><th>AMI</th><td>${Ami}</td></tr><tr><th>Region</th><td>${AWS::Region}</td></tr></table><p>CFN template 1.0</p></body></html>"
+           INFORMATION_HTML="<html><header><title>Wowdiewow je bent online!</title></header><body><table><tr><th>AMI</th><td>${Ami}</td></tr><tr><th>Region</th><td>${AWS::Region}</td></tr></table><p>CFN template 1.0</p></body></html>"
            echo $INFORMATION_HTML > /var/www/html/index.html
       PlacementTenancy: default
       SecurityGroups:
@@ -128,6 +141,10 @@ Resources:
       VPCZoneIdentifier:
         - !Ref AutoScalingSubnet
         - !Ref AutoScaling2Subnet
+      Tags:
+        - Key: Name
+          Value: Webserver
+          PropagateAtLaunch: true
   LogMetricsCloudWatchRole: #create cloudwatch role
     Type: AWS::IAM::Role
     Properties:
