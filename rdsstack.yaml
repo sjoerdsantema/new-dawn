@@ -38,7 +38,7 @@ Resources:
    Type: "AWS::RDS::DBSubnetGroup"
    Properties:
     DBSubnetGroupDescription: RDS cluster
-    DBSubnetGroupName: RDSSUBGROUP
+#    DBSubnetGroupName: RDSSUBGROUP
     SubnetIds:
      - !Ref DatabaseSubnet
      - !Ref Database2Subnet
