@@ -154,14 +154,6 @@ Resources:
               httpd:
                 enabled: 'true'
                 ensureRunning: 'true'
-        verify_instance_health:
-          commands:
-            ELBHealthCheck:
-              command: !Sub
-                'until [ "$state" == "\"InService\"" ]; do state=$(aws --region ${AWS::Region} elb describe-instance-health
-                 --load-balancer-name ${LoadBalancer}
-                 --instances $(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-                 --query InstanceStates[0].State); sleep 10; done'
     Properties:
      AssociatePublicIpAddress: false
      IamInstanceProfile: !Ref EC2Profile
