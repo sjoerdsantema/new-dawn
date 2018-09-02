@@ -164,7 +164,7 @@ Resources:
                  --query InstanceStates[0].State); sleep 10; done'
     Properties:
      AssociatePublicIpAddress: false
-     IamInstanceProfile: !Ref LogMetricsCloudWatchProfile
+     IamInstanceProfile: !Ref EC2Profile
      ImageId: !Ref Ami
      InstanceMonitoring: true
      InstanceType:
@@ -187,7 +187,7 @@ Resources:
      AutoScalingRollingUpdate:
       MaxBatchSize: '1'
       MinInstancesInService: '1'
-      PauseTime: PT15M #wait 15 minutes before switchting to the next instance 
+      PauseTime: PT10M #wait 15 minutes before switchting to the next instance
       WaitOnResourceSignals: 'true'
     Properties:
       LaunchConfigurationName: !Ref AsgLaunchConfiguration
@@ -225,7 +225,7 @@ Resources:
         Value: !Ref AutoScalingGroup
      ComparisonOperator: GreaterThanThreshold
      MetricName: CPUUtilization
-  LogMetricsCloudWatchRole: #create cloudwatch role
+  AssumeEC2Role: #create EC2 role
     Type: AWS::IAM::Role
     Properties:
      AssumeRolePolicyDocument:
@@ -238,7 +238,19 @@ Resources:
           Action:
             - sts:AssumeRole
      Path: "/"
-  LogMetricsCloudWatchPolicy: #create cloudwatch policy
+  DescribeHealthPolicy: #create describe health policy
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: DescribeHealthPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - elasticloadbalancing:DescribeInstanceHealth
+            Resource: "*"
+      Roles:
+        - !Ref AssumeEC2Role
+  LogMetricsCloudWatchPolicy: #create cloudwatch policy and S3 policy
     Type: AWS::IAM::Policy
     Properties:
       PolicyName: LogMetricsCloudWatchPolicy
@@ -259,13 +271,13 @@ Resources:
               - s3:GetObject
             Resource: arn:aws:s3:::one-sentia-course/*
       Roles:
-        - !Ref LogMetricsCloudWatchRole
-  LogMetricsCloudWatchProfile: #link cloudwatch role to profile
+        - !Ref AssumeEC2Role
+  EC2Profile: #create IAM profile
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: "/"
       Roles:
-        - !Ref LogMetricsCloudWatchRole
+        - !Ref AssumeEC2Role
 Outputs:
   BastionHost:
     Description: Bastion created in skeleton
