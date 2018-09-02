@@ -209,9 +209,9 @@ Resources:
           yum install -y aws-cfn-bootstrap
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
-          git config --global credential.helper '!aws --profile CodeCommitProfile codecommit credential-helper $@'
-          git config --global credential.UseHttpPath true
-          git clone https://git-codecommit.us-east-2.amazonaws.com/v1/repos/sentia-course /var/www/html 
+          git config --system credential.https://git-codecommit.us-east-1.amazonaws.com.helper '!aws --profile CodeCommitProfile codecommit credential-helper $@'
+          git config --system credential.https://git-codecommit.us-east-1.amazonaws.com.UseHttpPath true
+          git clone https://git-codecommit.us-east-2.amazonaws.com/v1/repos/sentia-course /var/www/html
       PlacementTenancy: default
       SecurityGroups:
         - !Ref AutoScalingSecurityGroup
