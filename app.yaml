@@ -109,53 +109,6 @@ Resources:
         PropagateAtLaunch: true
   AsgLaunchConfiguration: #create asg launch config
     Type: AWS::AutoScaling::LaunchConfiguration
-    Metadata:
-      AWS::CloudFormation::Init:
-        configSets:
-          full_install: [install_cfn, install_app]
-        install_cfn:
-          files:
-            /etc/cfn/cfn-hup.conf:
-              content: !Sub |
-               [main]
-                stack=${AWS::StackId}
-                region=${AWS::Region}
-              mode: '000400'
-              owner: root
-              group: root
-            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
-              content: !Sub |
-                [cfn-auto-reloader-hook]
-                triggers=post.update
-                path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init
-                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
-              mode: '000400'
-              owner: root
-              group: root
-          services:
-            sysvinit:
-              cfn-hup:
-                enabled: 'true'
-                ensureRunning: 'true'
-                files: [/etc/cfn/cfn-hup.conf, /etc/cfn/hooks.d/cfn-auto-reloader.conf]
-        install_app:
-          packages:
-            yum:
-              httpd: []
-          files:
-            /var/www/html/index.html:
-              content: !Join
-                - ''
-                - - '<h1>Congratulations, you have successfully launched the AWS CloudFormation sample.</h1>'
-                  - '<p>Version: 1.0</p>'
-              mode: '000644'
-              owner: root
-              group: root
-          services:
-            sysvinit:
-              httpd:
-                enabled: 'true'
-                ensureRunning: 'true'
     Properties:
      AssociatePublicIpAddress: false
      IamInstanceProfile: !Ref EC2Profile
@@ -169,24 +122,41 @@ Resources:
           !Sub |
            #!/bin/bash
            yum update -y
-           yum install -y aws-cfn-bootstrap
-           /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
-           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource AutoScalingGroup --region ${AWS::Region}
+           yum install -y httpd24 php56 php56-mysqlnd
+           service httpd start
+           chkconfig httpd on
+           usermod -a -G apache ec2-user
+           chown -R ec2-user:apache /var/www
+           chmod 2775 /var/www
+           yum install -y perl-Switch perl-DateTime perl-Sys-Syslog perl-LWP-Protocol-https perl-Digest-SHA unzip
+           cd /home/ec2-user
+           curl http://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScripts-1.2.1.zip -O
+           unzip CloudWatchMonitoringScripts-1.2.1.zip
+           rm -rf CloudWatchMonitoringScripts-1.2.1.zip
+           chown ec2-user:ec2-user aws-scripts-mon
+           echo "*/5 * * * *ec2-user /home/ec2-user/aws-scripts-mon/mon-put-instance-data.pl --mem-util --aggregated --auto-scaling --from-cron" >> /var/spool/cron/ec2-user
+           echo "*/5 * * * *ec2-user /home/ec2-user/aws-scripts-mon/mon-put-instance-data.pl --mem-util --from-cron" >> /var/spool/cron/ec2-user
+           curl https://s3.amazonaws.com//aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O
+           chmod +x ./awslogs-agent-setup.py
+           ./awslogs-agent-setup.py -n -r us-east-2 -c s3://one-sentia-course/logs.conf
+           AMI=`curl -s http://169.254.169.254/latest/meta-data/ami-id`
+           REGION=`curl -s http://169.254.169.254/latest/dynamic/instance-identity/document|grep region|awk -F\" '{print $4}'|tr -d '\n'`
+           AZ=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+           INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+           PRIVATE_IP=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
+           INFORMATION_HTML="<html><header><title>Wow-die-wow-bow it works!</title></header><body><table><tr><th>AMI:</th><td>${Ami}</td></tr><tr><th>Region:</th><td>${AWS::Region}</td></tr><tr><th>Rds Endpoint:</th><td>${RdsDb}</td></tr></table><p><b><i>check github.com/sjoerdsantema/nestedstacks</i></b></p></body></html>"
+           echo $INFORMATION_HTML > /var/www/html/index.html
      PlacementTenancy: default
      SecurityGroups:
       - !Ref AutoScalingSecurityGroup
   AutoScalingGroup: #spawn auto-scaling group
     Type: AWS::AutoScaling::AutoScalingGroup
-    CreationPolicy:
-      ResourceSignal:
-        Timeout: PT15M
-        Count: '2'
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MaxBatchSize: '1'
         MinInstancesInService: '1'
         PauseTime: PT15M
-        WaitOnResourceSignals: 'true'
+        WaitOnResourceSignals: 'false'
     Properties:
       LaunchConfigurationName: !Ref AsgLaunchConfiguration
       MinSize: 2
