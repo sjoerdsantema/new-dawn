@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Parent Stack with nested stacks for networking, ec2, app and database
+Description: Parent Stack with nested stacks for networking, ec2, app and database; deployments through CodePipeline
 Parameters:
   DTAP: #not used in this template but added for convenience
     Type: String
