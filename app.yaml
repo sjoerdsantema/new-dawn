@@ -58,17 +58,17 @@ Resources:
   LoadBalancer: #spawn a load balancer
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: AppLoadbalancer
-      Scheme: internet-facing
-      SecurityGroups:
-        - !Ref LoadBalancerSecurityGroup
-      Subnets:
-        - !Ref AutoScalingPubSubnet
-        - !Ref AutoScalingPub2Subnet
-      Type: application
-      Tags:
-        - Key: Name
-          Value: Internet-Facing Application Loadbalancer
+     Name: AppLoadbalancer
+     Scheme: internet-facing
+     SecurityGroups:
+      - !Ref LoadBalancerSecurityGroup
+     Subnets:
+      - !Ref AutoScalingPubSubnet
+      - !Ref AutoScalingPub2Subnet
+     Type: application
+     Tags:
+      - Key: Name
+        Value: Internet-Facing Application Loadbalancer
   ALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -94,43 +94,43 @@ Resources:
   BastionHostLaunchConfig: #create launch config for bastion host
     Type: "AWS::AutoScaling::LaunchConfiguration"
     Properties:
-        AssociatePublicIpAddress: true
-        ImageId: !Ref Ami
-        InstanceMonitoring: false
-        InstanceType: t2.micro
-        KeyName: !Ref KeyName
-        PlacementTenancy: default
-        SecurityGroups:
-          - Ref: BastionHostSecurityGroup
+     AssociatePublicIpAddress: true
+     ImageId: !Ref Ami
+     InstanceMonitoring: false
+     InstanceType: t2.micro
+     KeyName: !Ref KeyName
+     PlacementTenancy: default
+     SecurityGroups:
+      - Ref: BastionHostSecurityGroup
   BastionHostScalingGroup: # create the asg with a bastion host
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      LaunchConfigurationName:
-          Ref: BastionHostLaunchConfig
-      MinSize: '1'
-      MaxSize: '1'
-      VPCZoneIdentifier:
-        - !Ref BastionSubnet
-      Tags:
-        - Key: Name
-          Value: Bastion host
-          PropagateAtLaunch: true
+     LaunchConfigurationName:
+      Ref: BastionHostLaunchConfig
+     MinSize: '1'
+     MaxSize: '1'
+     VPCZoneIdentifier:
+      - !Ref BastionSubnet
+     Tags:
+      - Key: Name
+        Value: Bastion host
+        PropagateAtLaunch: true
   AsgLaunchConfiguration: #create asg launch config
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      AssociatePublicIpAddress: false
-      IamInstanceProfile: !Ref LogMetricsCloudWatchProfile
-      ImageId: !Ref Ami
-      InstanceMonitoring: true
-      InstanceType:
-       !FindInMap [EnvironmentSize, !Ref Sizing, EC2] #find in mappings corresponding ec2 size
-      KeyName: !Ref KeyName
-      UserData:
+     AssociatePublicIpAddress: false
+     IamInstanceProfile: !Ref LogMetricsCloudWatchProfile
+     ImageId: !Ref Ami
+     InstanceMonitoring: true
+     InstanceType:
+      !FindInMap [EnvironmentSize, !Ref Sizing, EC2] #find in mappings corresponding ec2 size
+     KeyName: !Ref KeyName
+     UserData:
         "Fn::Base64":
           !Sub |
            #!/bin/bash
            yum update -y
-           yum install -y httpd24 
+           yum install -y httpd24
            service httpd start
            chkconfig httpd on
            usermod -a -G apache ec2-user
@@ -154,17 +154,17 @@ Resources:
            PRIVATE_IP=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
            INFORMATION_HTML="<html><header><title>Wow-die-wow-bow it works!</title></header><body><table><tr><th>AMI:</th><td>${Ami}</td></tr><tr><th>Region:</th><td>${AWS::Region}</td></tr><tr><th>Rds Endpoint:</th><td>${RdsDb}</td></tr></table><p><b><i>check github.com/sjoerdsantema/nestedstacks</i></b></p></body></html>"
            echo $INFORMATION_HTML > /var/www/html/index.html
-      PlacementTenancy: default
-      SecurityGroups:
-        - !Ref AutoScalingSecurityGroup
+     PlacementTenancy: default
+     SecurityGroups:
+      - !Ref AutoScalingSecurityGroup
   AutoScalingGroup: #spawn auto-scaling group
     Type: AWS::AutoScaling::AutoScalingGroup
     UpdatePolicy:
-      AutoScalingRollingUpdate:
-        MaxBatchSize: '1'
-        MinInstancesInService: '1'
-        PauseTime: PT15M
-        WaitOnResourceSignals: 'true'
+     AutoScalingRollingUpdate:
+      MaxBatchSize: '1'
+      MinInstancesInService: '1'
+      PauseTime: PT15M
+      WaitOnResourceSignals: 'true'
     Properties:
       LaunchConfigurationName: !Ref AsgLaunchConfiguration
       MinSize: 2
@@ -186,22 +186,22 @@ Resources:
           Value: Webserver
           PropagateAtLaunch: true
   ScaleUpPolicy: #scaling policy
-   Type: AWS::AutoScaling::ScalingPolicy
-   Properties:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
      AdjustmentType: ChangeInCapacity
      AutoScalingGroupName: !Ref AutoScalingGroup
      Cooldown: '1'
      ScalingAdjustment: '1'
   AlertTopic:
-   Type: AWS::SNS::Topic
-   Properties:
+    Type: AWS::SNS::Topic
+    Properties:
     Subscription:
       - Endpoint: !Ref NotificationEmail
         Protocol: 'email'
     TopicName: 'FirstBoot'
   CPUAlarmHigh:
-   Type: AWS::CloudWatch::Alarm
-   Properties:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
      EvaluationPeriods: '1'
      Statistic: Average
      Threshold: '10'
@@ -218,16 +218,16 @@ Resources:
   LogMetricsCloudWatchRole: #create cloudwatch role
     Type: AWS::IAM::Role
     Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - ec2.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: "/"
+     AssumeRolePolicyDocument:
+      Version: 2012-10-17
+      Statement:
+        - Effect: Allow
+          Principal:
+          Service:
+            - ec2.amazonaws.com
+          Action:
+            - sts:AssumeRole
+     Path: "/"
   LogMetricsCloudWatchPolicy: #create cloudwatch policy
     Type: AWS::IAM::Policy
     Properties:
