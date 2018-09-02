@@ -130,7 +130,7 @@ Resources:
           !Sub |
            #!/bin/bash
            yum update -y
-           yum install -y httpd24 php56 php56-mysqlnd
+           yum install -y httpd24 
            service httpd start
            chkconfig httpd on
            usermod -a -G apache ec2-user
@@ -159,6 +159,12 @@ Resources:
         - !Ref AutoScalingSecurityGroup
   AutoScalingGroup: #spawn auto-scaling group
     Type: AWS::AutoScaling::AutoScalingGroup
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '1'
+        MinInstancesInService: '1'
+        PauseTime: PT15M
+        WaitOnResourceSignals: 'true'
     Properties:
       LaunchConfigurationName: !Ref AsgLaunchConfiguration
       MinSize: 2
