@@ -128,8 +128,10 @@ Resources:
                 [cfn-auto-reloader-hook]
                 triggers=post.update
                 path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init
-               action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
-                runas=root
+                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
+              mode: '000400'
+              owner: root
+              group: root
           services:
             sysvinit:
               cfn-hup:
@@ -168,17 +170,27 @@ Resources:
            #!/bin/bash
            yum update -y
            yum install -y aws-cfn-bootstrap
-           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
+           /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
      PlacementTenancy: default
      SecurityGroups:
       - !Ref AutoScalingSecurityGroup
   AutoScalingGroup: #spawn auto-scaling group
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+        Count: '2'
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '1'
+        MinInstancesInService: '1'
+        PauseTime: PT15M
+        WaitOnResourceSignals: 'true'
     Properties:
       LaunchConfigurationName: !Ref AsgLaunchConfiguration
       MinSize: 2
-      MaxSize: 4
+      MaxSize: 2
       TargetGroupARNs:
         - !Ref ALBTargetGroup
       VPCZoneIdentifier:
@@ -186,7 +198,7 @@ Resources:
         - !Ref AutoScaling2Subnet
       Tags:
         - Key: Name
-          Value: Webserver
+          Value: Webserver Dodedeploy
           PropagateAtLaunch: true
   EC2Profile: #create IAM profile
     Type: AWS::IAM::InstanceProfile
