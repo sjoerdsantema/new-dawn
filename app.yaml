@@ -111,7 +111,6 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       AssociatePublicIpAddress: false
-      IamInstanceProfile: !Ref LogMetricsCloudWatchProfile
       ImageId: !Ref Ami
       InstanceMonitoring: true
       InstanceType:
@@ -128,17 +127,6 @@ Resources:
            usermod -a -G apache ec2-user
            chown -R ec2-user:apache /var/www
            chmod 2775 /var/www
-           yum install -y perl-Switch perl-DateTime perl-Sys-Syslog perl-LWP-Protocol-https perl-Digest-SHA unzip
-           cd /home/ec2-user
-           curl http://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScripts-1.2.1.zip -O
-           unzip CloudWatchMonitoringScripts-1.2.1.zip
-           rm -rf CloudWatchMonitoringScripts-1.2.1.zip
-           chown ec2-user:ec2-user aws-scripts-mon
-           echo "*/5 * * * *ec2-user /home/ec2-user/aws-scripts-mon/mon-put-instance-data.pl --mem-util --aggregated --auto-scaling --from-cron" >> /var/spool/cron/ec2-user
-           echo "*/5 * * * *ec2-user /home/ec2-user/aws-scripts-mon/mon-put-instance-data.pl --mem-util --from-cron" >> /var/spool/cron/ec2-user
-           curl https://s3.amazonaws.com//aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O
-           chmod +x ./awslogs-agent-setup.py
-           ./awslogs-agent-setup.py -n -r us-east-2 -c s3://one-sentia-course/logs.conf
            AMI=`curl -s http://169.254.169.254/latest/meta-data/ami-id`
            REGION=`curl -s http://169.254.169.254/latest/dynamic/instance-identity/document|grep region|awk -F\" '{print $4}'|tr -d '\n'`
            AZ=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
@@ -160,88 +148,10 @@ Resources:
       VPCZoneIdentifier:
         - !Ref AutoScalingSubnet
         - !Ref AutoScaling2Subnet
-      NotificationConfigurations: #send an email to sjoerd whenever an instance is launched, terminated or dying
-      - TopicARN: !Ref AlertTopic
-        NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
         - Key: Name
-          Value: Webserver
+          Value: New Dawn - Webserver
           PropagateAtLaunch: true
-  ScaleUpPolicy: #scaling policy
-   Type: AWS::AutoScaling::ScalingPolicy
-   Properties:
-     AdjustmentType: ChangeInCapacity
-     AutoScalingGroupName: !Ref AutoScalingGroup
-     Cooldown: '1'
-     ScalingAdjustment: '1'
-  AlertTopic:
-   Type: AWS::SNS::Topic
-   Properties:
-    Subscription:
-      - Endpoint: !Ref NotificationEmail
-        Protocol: 'email'
-    TopicName: 'New Dawn'
-  CPUAlarmHigh:
-   Type: AWS::CloudWatch::Alarm
-   Properties:
-     EvaluationPeriods: '1'
-     Statistic: Average
-     Threshold: '10'
-     AlarmDescription: Alarm if CPU too high or metric disappears indicating instance is down
-     Period: '60'
-     AlarmActions:
-      - !Ref ScaleUpPolicy
-     Namespace: AWS/EC2
-     Dimensions:
-      - Name: AutoScalingGroup
-        Value: !Ref AutoScalingGroup
-     ComparisonOperator: GreaterThanThreshold
-     MetricName: CPUUtilization
-  LogMetricsCloudWatchRole: #create cloudwatch role
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - ec2.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: "/"
-  LogMetricsCloudWatchPolicy: #create cloudwatch policy
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: LogMetricsCloudWatchPolicy
-      PolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action:
-              - cloudwatch:PutMetricdata
-              - ec2:DescribeTags
-              - logs:PutLogEvents
-              - logs:DescribeLogStreams
-              - logs:DescribeLogGroups
-              - logs:CreateLogStreams
-              - logs:CreateLogGroup
-            Resource: "*"
-          - Effect: Allow
-            Action:
-              - s3:GetObject
-            Resource: arn:aws:s3:::one-sentia-course/*
-      Roles:
-        - !Ref LogMetricsCloudWatchRole
-  LogMetricsCloudWatchProfile: #link cloudwatch role to profile
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Path: "/"
-      Roles:
-        - !Ref LogMetricsCloudWatchRole
 Outputs:
   BastionHost:
     Description: Bastion created in skeleton
