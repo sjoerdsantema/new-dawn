@@ -12,9 +12,6 @@ Parameters:
   KeyName:
     Type: String
     Default: trainingdays
-  NotificationEmail:
-    Type: String
-    Default: sjoerdsantema@gmail.com
   Sizing: #added so sizing can easily be changed when needed
     Type: String
     Default: "Small"
@@ -55,7 +52,6 @@ Resources:
         !GetAtt 'SkeletonStack.Outputs.SAutoScalingSecurityGroup'
       KeyName: !Ref KeyName
       Sizing: !Ref Sizing
-      NotificationEmail: !Ref NotificationEmail
       Vpc:
         !GetAtt 'SkeletonStack.Outputs.SVPC'
       Ami: !Ref Ami
