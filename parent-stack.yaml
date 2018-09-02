@@ -30,12 +30,12 @@ Resources:
  SkeletonStack:
   Type: AWS::CloudFormation::Stack
   Properties:
-    TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/skeleton.yaml
+    TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/new-dawn/skeleton.yaml
     TimeoutInMinutes: 60
  AppStack:
   Type: AWS::CloudFormation::Stack
   Properties:
-    TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/app.yaml
+    TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/new-dawn/app.yaml
     Parameters:
       BastionSubnet:
         !GetAtt 'SkeletonStack.Outputs.SBastionSubnet'
