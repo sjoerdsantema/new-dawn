@@ -187,7 +187,7 @@ Resources:
      AutoScalingRollingUpdate:
       MaxBatchSize: '1'
       MinInstancesInService: '1'
-      PauseTime: PT15M
+      PauseTime: PT15M #wait 15 minutes before switchting to the next instance 
       WaitOnResourceSignals: 'true'
     Properties:
       LaunchConfigurationName: !Ref AsgLaunchConfiguration
