@@ -192,7 +192,7 @@ Resources:
       MaxBatchSize: '1'
       MinInstancesInService: '1'
       PauseTime: PT10M #wait 10 minutes before switchting to the next instance
-      WaitOnResourceSignals: 'true'
+      WaitOnResourceSignals: 'false'
     Properties:
       LaunchConfigurationName: !Ref AsgLaunchConfiguration
       MinSize: 2
