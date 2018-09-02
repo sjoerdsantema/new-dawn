@@ -107,51 +107,6 @@ Resources:
         - Key: Name
           Value: Bastion host
           PropagateAtLaunch: true
-  AsgLaunchConfiguration: #create asg launch config
-    Type: AWS::AutoScaling::LaunchConfiguration
-    Properties:
-      AssociatePublicIpAddress: false
-      ImageId: !Ref Ami
-      InstanceMonitoring: true
-      InstanceType:
-       !FindInMap [EnvironmentSize, !Ref Sizing, EC2] #find in mappings corresponding ec2 size
-      KeyName: !Ref KeyName
-      UserData:
-        "Fn::Base64":
-          !Sub |
-           #!/bin/bash
-           yum update -y
-           yum install -y httpd24 php56 php56-mysqlnd
-           service httpd start
-           chkconfig httpd on
-           usermod -a -G apache ec2-user
-           chown -R ec2-user:apache /var/www
-           chmod 2775 /var/www
-           AMI=`curl -s http://169.254.169.254/latest/meta-data/ami-id`
-           REGION=`curl -s http://169.254.169.254/latest/dynamic/instance-identity/document|grep region|awk -F\" '{print $4}'|tr -d '\n'`
-           AZ=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
-           INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-           PRIVATE_IP=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
-           INFORMATION_HTML="<html><header><title>Wow-die-wow-bow it works!</title></header><body><table><tr><th>AMI:</th><td>${Ami}</td></tr><tr><th>Region:</th><td>${AWS::Region}</td></tr><tr><th>Rds Endpoint:</th><td>${RdsDb}</td></tr></table><p><b><i>check github.com/sjoerdsantema/nestedstacks</i></b></p></body></html>"
-           echo $INFORMATION_HTML > /var/www/html/index.html
-      PlacementTenancy: default
-      SecurityGroups:
-        - !Ref AutoScalingSecurityGroup
-  AutoScalingGroup: #spawn auto-scaling group
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Properties:
-      LaunchConfigurationName: !Ref AsgLaunchConfiguration
-      MinSize: 2
-      MaxSize: 4
-      TargetGroupARNs:
-        - !Ref ALBTargetGroup
-      VPCZoneIdentifier:
-        - !Ref AutoScalingSubnet
-        - !Ref AutoScaling2Subnet
-      Tags:
-        - Key: Name
-          Value: New Dawn - Webserver
-          PropagateAtLaunch: true
 Outputs:
   BastionHost:
     Description: Bastion created in skeleton
