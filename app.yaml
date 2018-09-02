@@ -151,12 +151,6 @@ Resources:
       - !Ref AutoScalingSecurityGroup
   AutoScalingGroup: #spawn auto-scaling group
     Type: AWS::AutoScaling::AutoScalingGroup
-    UpdatePolicy:
-      AutoScalingRollingUpdate:
-        MaxBatchSize: '1'
-        MinInstancesInService: '1'
-        PauseTime: PT15M
-        WaitOnResourceSignals: 'false'
     Properties:
       LaunchConfigurationName: !Ref AsgLaunchConfiguration
       MinSize: 2
