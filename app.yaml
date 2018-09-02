@@ -68,7 +68,7 @@ Resources:
             Action:
               - sts:AssumeRole
       Path: "/"
-  EC2Policy: #create ec2 policy
+  EC2Policy: #create ec2 policy with some relics from previous assignments
     Type: AWS::IAM::Policy
     Properties:
       PolicyName: EC2Policy
@@ -83,6 +83,10 @@ Resources:
               - logs:DescribeLogGroups
               - logs:CreateLogStreams
               - logs:CreateLogGroup
+              - codecommit:BatchGetRepositories
+              - codecommit:Get*
+              - codecommit:GitPull
+              - codecommit:List*
             Resource: "*"
           - Effect: Allow
             Action:
@@ -150,7 +154,7 @@ Resources:
         - !Ref BastionSubnet
       Tags:
         - Key: Name
-          Value: Bastion host
+          Value: New Dawn - Bastion host
           PropagateAtLaunch: true
   AsgLaunchConfiguration: #create asg launch config
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -185,15 +189,7 @@ Resources:
           packages:
             yum:
               httpd: []
-          files:
-            /var/www/html/index.html:
-              content: !Join
-                - ''
-                - - '<h1>Howdiehow you have done it</h1>'
-                  - '<p>Version: 1.0</p>'
-              mode: '000644'
-              owner: root
-              group: root
+              git: []
           services:
             sysvinit:
               httpd:
@@ -213,6 +209,9 @@ Resources:
           yum install -y aws-cfn-bootstrap
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
+          git config --global credential.helper '!aws --profile CodeCommitProfile codecommit credential-helper $@'
+          git config --global credential.UseHttpPath true
+          git clone https://git-codecommit.us-east-2.amazonaws.com/v1/repos/sentia-course /var/www/html 
       PlacementTenancy: default
       SecurityGroups:
         - !Ref AutoScalingSecurityGroup
