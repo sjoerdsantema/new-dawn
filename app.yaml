@@ -128,7 +128,7 @@ Resources:
                 [cfn-auto-reloader-hook]
                 triggers=post.update
                 path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init
-                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --configsets full_install --region ${AWS::Region}
+                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
                 runas=root
           services:
             sysvinit:
@@ -176,8 +176,8 @@ Resources:
            #!/bin/bash
            yum update -y
            yum install -y aws-cfn-bootstrap
-           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LaunchConfig --configsets full_install --region ${AWS::Region}
-           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WebServerGroup --region ${AWS::Region}
+           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
+           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AsgLaunchConfiguration --region ${AWS::Region}
      PlacementTenancy: default
      SecurityGroups:
       - !Ref AutoScalingSecurityGroup
