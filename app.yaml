@@ -112,7 +112,7 @@ Resources:
     Metadata:
       AWS::CloudFormation::Init:
         configSets:
-          full_install: [install_cfn, install_app, verify_instance_health]
+          full_install: [install_cfn, install_app]
         install_cfn:
           files:
             /etc/cfn/cfn-hup.conf:
@@ -128,7 +128,7 @@ Resources:
                 [cfn-auto-reloader-hook]
                 triggers=post.update
                 path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init
-                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
+               action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
                 runas=root
           services:
             sysvinit:
@@ -175,16 +175,6 @@ Resources:
       - !Ref AutoScalingSecurityGroup
   AutoScalingGroup: #spawn auto-scaling group
     Type: AWS::AutoScaling::AutoScalingGroup
-    CreationPolicy:
-     ResourceSignal:
-      Timeout: PT10M
-      Count: '2'
-    UpdatePolicy:
-     AutoScalingRollingUpdate:
-      MaxBatchSize: '1'
-      MinInstancesInService: '1'
-      PauseTime: PT10M #wait 10 minutes before switchting to the next instance
-      WaitOnResourceSignals: 'false'
     Properties:
       LaunchConfigurationName: !Ref AsgLaunchConfiguration
       MinSize: 2
