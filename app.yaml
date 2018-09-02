@@ -225,6 +225,12 @@ Resources:
         Value: !Ref AutoScalingGroup
      ComparisonOperator: GreaterThanThreshold
      MetricName: CPUUtilization
+  EC2Profile: #create IAM profile
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref AssumeEC2Role
   AssumeEC2Role: #create EC2 role
     Type: AWS::IAM::Role
     Properties:
@@ -270,12 +276,6 @@ Resources:
             Action:
               - s3:GetObject
             Resource: arn:aws:s3:::one-sentia-course/*
-      Roles:
-        - !Ref AssumeEC2Role
-  EC2Profile: #create IAM profile
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Path: "/"
       Roles:
         - !Ref AssumeEC2Role
 Outputs:
