@@ -94,7 +94,7 @@ Resources:
         PlacementTenancy: default
         SecurityGroups:
           - Ref: BastionHostSecurityGroup
-  BastionHostScalingGroup: # create the asg with a bastion host
+  BastionHostScalingGroup: # create the asg with a bastion host ec2
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       LaunchConfigurationName:
