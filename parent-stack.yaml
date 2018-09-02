@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Parent Stack with nested stacks for networking, ec2, app and database; deployments through CodePipeline en CodeDeployer
+Description: Parent Stack with nested stacks for networking, ec2 and app; no database; deployments through CodePipeline en CodeDeployer
 Parameters:
   DTAP: #not used in this template but added for convenience
     Type: String
@@ -15,9 +15,6 @@ Parameters:
   NotificationEmail:
     Type: String
     Default: sjoerdsantema@gmail.com
-  ParDatabasename:
-    Type: String
-    Default: mydatabase
   Sizing: #added so sizing can easily be changed when needed
     Type: String
     Default: "Small"
@@ -26,12 +23,6 @@ Parameters:
      - Medium
      - Large
     Description: Select sizing
-  Databaseuser: #change to whatever user you require
-    Type: String
-    Default: mydatabase
-  Databasepassword: #change to whatever password you require
-    Type: String
-    Default: mydatabase
   Ami:
     Type: String
     Default: ami-40142d25 #this ami is only available in us-east-2 under this number(!) consider using mapping instead of hard coding
@@ -62,30 +53,12 @@ Resources:
         !GetAtt 'SkeletonStack.Outputs.SAutoScalingPub2Subnet'
       AutoScalingSecurityGroup:
         !GetAtt 'SkeletonStack.Outputs.SAutoScalingSecurityGroup'
-      RdsDb:
-        !GetAtt 'RdsStack.Outputs.RdsDb'
       KeyName: !Ref KeyName
       Sizing: !Ref Sizing
       NotificationEmail: !Ref NotificationEmail
       Vpc:
         !GetAtt 'SkeletonStack.Outputs.SVPC'
       Ami: !Ref Ami
-    TimeoutInMinutes: 60
- RdsStack:
-  Type: AWS::CloudFormation::Stack
-  Properties:
-    TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/rdsstack.yaml
-    Parameters:
-     Sizing: !Ref Sizing
-     DatabaseSubnet:
-      !GetAtt 'SkeletonStack.Outputs.SDatabaseSubnet'
-     Database2Subnet:
-      !GetAtt 'SkeletonStack.Outputs.SDatabase2Subnet'
-     ParDatabasename: !Ref ParDatabasename
-     Databaseuser: !Ref Databaseuser
-     Databasepassword: !Ref Databasepassword
-     DatabaseSecurityGroup:
-      !GetAtt 'SkeletonStack.Outputs.SDatabaseSecurityGroup'
     TimeoutInMinutes: 60
 Outputs:
   SVPC:
@@ -104,14 +77,6 @@ Outputs:
    Description: Autoscaling 2 subnet SkeletonStack
    Value:
     !GetAtt 'SkeletonStack.Outputs.SAutoScaling2Subnet'
-  SDatabaseSubnet:
-   Description: Database subnet SkeletonStack
-   Value:
-    !GetAtt 'SkeletonStack.Outputs.SDatabaseSubnet'
-  SDatabase2Subnet:
-   Description: Database subnet SkeletonStack
-   Value:
-    !GetAtt 'SkeletonStack.Outputs.SDatabase2Subnet'
   SBastionHostSecurityGroup:
    Description: Bastion security group SkeletonStack
    Value:
@@ -124,18 +89,10 @@ Outputs:
    Description: ASG security group SkeletonStack
    Value:
     !GetAtt 'SkeletonStack.Outputs.SAutoScalingSecurityGroup'
-  SDatabaseSecurityGroup:
-    Description: Database security group SkeletonStack
-    Value:
-     !GetAtt 'SkeletonStack.Outputs.SDatabaseSecurityGroup'
   SNAT:
     Description: NAT in SkeletonStack
     Value:
      !GetAtt 'SkeletonStack.Outputs.SNatGateway'
-  RdsDB:
-    Description: Endpoint of RDS
-    Value:
-     !GetAtt 'RdsStack.Outputs.RdsDb'
   LoadBalancerEndpoint:
     Description: Endpoint of the load Balancer
     Value:

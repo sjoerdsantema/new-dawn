@@ -87,32 +87,6 @@ Resources:
           Value: Private Autoscaling 2 Subnet
       CidrBlock: 10.0.21.0/24
       MapPublicIpOnLaunch: false
-  DatabaseSubnet: #create database 1 subnet
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone:
-          Fn::Select:
-            - 0
-            - Fn::GetAZs: ""
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: Database 1 Subnet
-      CidrBlock: 10.0.30.0/24
-      MapPublicIpOnLaunch: false
-  Database2Subnet: #create database 2 subnet
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone:
-          Fn::Select:
-            - 1
-            - Fn::GetAZs: ""
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: Database 2 Subnet
-      CidrBlock: 10.0.31.0/24
-      MapPublicIpOnLaunch: false
   NatSubnet: #create the nat subnet
     Type: AWS::EC2::Subnet
     Properties:
@@ -159,14 +133,6 @@ Resources:
       SecurityGroupEgress: #this should be restricted in production environments
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
-  DatabaseSecurityGroup: #create database security group
-   Type: AWS::EC2::SecurityGroup
-   Properties:
-    GroupDescription: DatabaseSecurityGroup
-    VpcId: !Ref VPC
-    Tags:
-      - Key: Name
-        Value: Database Security Group
   AutoScalingSecurityGroup: #create asg security group
    Type: AWS::EC2::SecurityGroup
    Properties:
@@ -187,14 +153,6 @@ Resources:
      ToPort: '22'
      FromPort: '22'
      SourceSecurityGroupId: !Ref BastionHostSecurityGroup
-  AutoScaling3Ingress: #ingress seperate to prevent dependency
-   Type: AWS::EC2::SecurityGroupIngress
-   Properties:
-     GroupId: !Ref AutoScalingSecurityGroup
-     IpProtocol: tcp
-     ToPort: '80'
-     FromPort: '80'
-     SourceSecurityGroupId: !Ref DatabaseSecurityGroup
   AutoScaling4Ingress: #ingress seperate to prevent dependency
    Type: AWS::EC2::SecurityGroupIngress
    Properties:
@@ -211,14 +169,6 @@ Resources:
      ToPort: '443'
      FromPort: '443'
      SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
-  DatabaseIngress: #ingress seperate to prevent dependency
-   Type: AWS::EC2::SecurityGroupIngress
-   Properties:
-     GroupId: !Ref DatabaseSecurityGroup
-     IpProtocol: tcp
-     ToPort: '3306'
-     FromPort: '3306'
-     SourceSecurityGroupId: !Ref AutoScalingSecurityGroup
   #create route tables
   PublicRouteTable: #create bastion/public route table
     Type: AWS::EC2::RouteTable
@@ -241,13 +191,6 @@ Resources:
       Tags:
         - Key: Name
           Value: AutoScaling Route Table
-  DatabaseRouteTable: #create database route table
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: Database Route Table
   #create additonal routes
   NatRoute:
     Type: AWS::EC2::Route
@@ -340,15 +283,6 @@ Outputs:
   SAutoScaling2Subnet:
     Description: Autoscaling subnet 2nd az created in skeleton
     Value: !Ref AutoScaling2Subnet
-  SDatabaseSubnet:
-    Description: Database subnet 1 created in skeleton
-    Value: !Ref DatabaseSubnet
-  SDatabase2Subnet:
-    Description: Database subnet 2 created in skeleton
-    Value: !Ref Database2Subnet
-  SDatabaseSecurityGroup:
-    Description: Database Security Group created in skeleton
-    Value: !Ref DatabaseSecurityGroup
   SBastionHostSecurityGroup:
     Description: BastionHostSecurityGroup created in skeleton
     Value: !Ref BastionHostSecurityGroup
