@@ -49,6 +49,51 @@ Mappings:
       "EC2": "db.t2.medium"
       "DB": "db.t2.medium"
 Resources:
+  EC2Profile: #link ec2 role to profile
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref EC2Role
+  EC2Role: #create ec2 role
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+  EC2Policy: #create ec2 policy
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: EC2Policy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - cloudwatch:PutMetricdata
+              - ec2:DescribeTags
+              - logs:PutLogEvents
+              - logs:DescribeLogStreams
+              - logs:DescribeLogGroups
+              - logs:CreateLogStreams
+              - logs:CreateLogGroup
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - elasticloadbalancing:DescribeInstanceHealth
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource: arn:aws:s3:::one-sentia-course/*
+      Roles:
+        - !Ref EC2Role
   LoadBalancer: #spawn a load balancer
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
