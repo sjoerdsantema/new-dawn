@@ -1,0 +1,135 @@
+#location of repository
+git clone https://git-codecommit.us-east-2.amazonaws.com/v1/repos/sentia-course
+
+
+DescribeHealthPolicy: #create describe health policy
+  Type: AWS::IAM::Policy
+  Properties:
+    PolicyName: DescribeHealthPolicy
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - elasticloadbalancing:DescribeInstanceHealth
+          Resource: "*"
+    Roles:
+      - !Ref AssumeEC2Role
+
+
+
+      AsgLaunchConfiguration: #create asg launch config
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Properties:
+          AssociatePublicIpAddress: false
+          ImageId: !Ref Ami
+          InstanceMonitoring: true
+          InstanceType:
+           !FindInMap [EnvironmentSize, !Ref Sizing, EC2] #find in mappings corresponding ec2 size
+          KeyName: !Ref KeyName
+          UserData:
+            "Fn::Base64":
+              !Sub |
+               #!/bin/bash
+               yum update -y
+               yum install -y httpd24 php56 php56-mysqlnd
+               service httpd start
+               chkconfig httpd on
+               usermod -a -G apache ec2-user
+               chown -R ec2-user:apache /var/www
+               chmod 2775 /var/www
+               AMI=`curl -s http://169.254.169.254/latest/meta-data/ami-id`
+               REGION=`curl -s http://169.254.169.254/latest/dynamic/instance-identity/document|grep region|awk -F\" '{print $4}'|tr -d '\n'`
+               AZ=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+               INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+               PRIVATE_IP=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
+               INFORMATION_HTML="<html><header><title>Wow-die-wow-bow it works!</title></header><body><table><tr><th>AMI:</th><td>${Ami}</td></tr><tr><th>Region:</th><td>${AWS::Region}</td></tr><tr><th>Rds Endpoint:</th><td>${RdsDb}</td></tr></table><p><b><i>check github.com/sjoerdsantema/nestedstacks</i></b></p></body></html>"
+               echo $INFORMATION_HTML > /var/www/html/index.html
+          PlacementTenancy: default
+          SecurityGroups:
+            - !Ref AutoScalingSecurityGroup
+      AutoScalingGroup: #spawn auto-scaling group
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties:
+          LaunchConfigurationName: !Ref AsgLaunchConfiguration
+          MinSize: 2
+          MaxSize: 4
+          TargetGroupARNs:
+            - !Ref ALBTargetGroup
+          VPCZoneIdentifier:
+            - !Ref AutoScalingSubnet
+            - !Ref AutoScaling2Subnet
+          Tags:
+            - Key: Name
+              Value: New Dawn - Webserver
+              PropagateAtLaunch: true
+      LogMetricsCloudWatchRole: #create cloudwatch role
+        Type: AWS::IAM::Role
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                    - ec2.amazonaws.com
+                Action:
+                  - sts:AssumeRole
+          Path: "/"
+      LogMetricsCloudWatchPolicy: #create cloudwatch policy
+        Type: AWS::IAM::Policy
+        Properties:
+          PolicyName: LogMetricsCloudWatchPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricdata
+                  - ec2:DescribeTags
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                  - logs:DescribeLogGroups
+                  - logs:CreateLogStreams
+                  - logs:CreateLogGroup
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: arn:aws:s3:::one-sentia-course/*
+          Roles:
+            - !Ref LogMetricsCloudWatchRole
+      LogMetricsCloudWatchProfile: #link cloudwatch role to profile
+        Type: AWS::IAM::InstanceProfile
+        Properties:
+          Path: "/"
+          Roles:
+            - !Ref LogMetricsCloudWatchRole
+            ScaleUpPolicy: #scaling policy
+             Type: AWS::AutoScaling::ScalingPolicy
+             Properties:
+               AdjustmentType: ChangeInCapacity
+               AutoScalingGroupName: !Ref AutoScalingGroup
+               Cooldown: '1'
+               ScalingAdjustment: '1'
+            AlertTopic:
+             Type: AWS::SNS::Topic
+             Properties:
+              Subscription:
+                - Endpoint: !Ref NotificationEmail
+                  Protocol: 'email'
+              TopicName: 'New Dawn'
+            CPUAlarmHigh:
+             Type: AWS::CloudWatch::Alarm
+             Properties:
+               EvaluationPeriods: '1'
+               Statistic: Average
+               Threshold: '10'
+               AlarmDescription: Alarm if CPU too high or metric disappears indicating instance is down
+               Period: '60'
+               AlarmActions:
+                - !Ref ScaleUpPolicy
+               Namespace: AWS/EC2
+               Dimensions:
+                - Name: AutoScalingGroup
+                  Value: !Ref AutoScalingGroup
+               ComparisonOperator: GreaterThanThreshold
+               MetricName: CPUUtilization
