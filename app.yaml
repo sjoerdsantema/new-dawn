@@ -197,16 +197,16 @@ Resources:
                 triggers=post.update
                 path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init
                 action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
-                runas=root\
+                runas=root
           services:
             sysvinit:
               cfn-hup:
                 enabled: 'true'
                 ensureRunning: 'true'
                 files: [/etc/cfn/cfn-hup.conf, /etc/cfn/hooks.d/cfn-auto-reloader.conf]
-          install_app:
-            packages:
-             yum:
+        install_app:
+          packages:
+            yum:
               httpd: []
               git: []
           services:
@@ -228,10 +228,6 @@ Resources:
           yum install -y aws-cfn-bootstrap
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
-          cd /home/ec2-user
-          wget https://aws-codedeploy-us-east-2.s3.amazonaws.com/latest/install
-          chmod +x ./install
-          sudo ./install auto
           git clone ${Repository} /var/www/html
       PlacementTenancy: default
       SecurityGroups:
