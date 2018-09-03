@@ -57,34 +57,6 @@ Outputs:
    Description: VpcId SkeletonStack
    Value:
     !GetAtt 'SkeletonStack.Outputs.SVPC'
-  SInternetGateway:
-   Description: InternetGateway SkeletonStack
-   Value:
-    !GetAtt 'SkeletonStack.Outputs.SInternetGateway'
-  SBastionSubnet:
-   Description: Bastion subnet SkeletonStack
-   Value:
-    !GetAtt 'SkeletonStack.Outputs.SBastionSubnet'
-  SAutoScaling2Subnet:
-   Description: Autoscaling 2 subnet SkeletonStack
-   Value:
-    !GetAtt 'SkeletonStack.Outputs.SAutoScaling2Subnet'
-  SBastionHostSecurityGroup:
-   Description: Bastion security group SkeletonStack
-   Value:
-    !GetAtt 'SkeletonStack.Outputs.SBastionHostSecurityGroup'
-  SLoadBalancerSecurityGroup:
-   Description: Load balancer security group SkeletonStack
-   Value:
-    !GetAtt 'SkeletonStack.Outputs.SLoadBalancerSecurityGroup'
-  SAutoScalingSecurityGroup:
-   Description: ASG security group SkeletonStack
-   Value:
-    !GetAtt 'SkeletonStack.Outputs.SAutoScalingSecurityGroup'
-  SNAT:
-    Description: NAT in SkeletonStack
-    Value:
-     !GetAtt 'SkeletonStack.Outputs.SNatGateway'
   LoadBalancerEndpoint:
     Description: Endpoint of the load Balancer (http)
     Value:

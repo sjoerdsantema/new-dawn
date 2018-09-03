@@ -114,6 +114,14 @@ Resources:
               - s3:List*
               - s3:Get*
               - elasticloadbalancing:DescribeInstanceHealth
+              - elasticloadbalancing:DescribeLoadBalancers
+              - elasticloadbalancing:DescribeInstanceHealth
+              - elasticloadbalancing:RegisterInstancesWithLoadBalancer
+              - elasticloadbalancing:DeregisterInstancesFromLoadBalancer
+              - elasticloadbalancing:DescribeTargetGroups
+              - elasticloadbalancing:DescribeTargetHealth
+              - elasticloadbalancing:RegisterTargets
+              - elasticloadbalancing:DeregisterTargets
             Resource: "*"
       Roles:
         - !Ref EC2Role
