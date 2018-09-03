@@ -17,7 +17,7 @@ Parameters:
     Description: Select sizing
   Ami:
     Type: String
-    Default: ami-40142d25 #this ami is only available in us-east-2 under this number(!) consider using mapping instead of hard coding
+    Default: ami-40142d25 #this ami is only available in us-east-2 under this number! consider using mapping instead of hard coding
 Resources:
  SkeletonStack:
   Type: AWS::CloudFormation::Stack
