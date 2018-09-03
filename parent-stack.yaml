@@ -88,4 +88,4 @@ Outputs:
   LoadBalancerEndpoint:
     Description: Endpoint of the load Balancer (http)
     Value:
-      !Join ['http://',!GetAtt 'AppStack.Outputs.LoadBalancer','/index.html']
+      !Join ["",['http://',!GetAtt 'AppStack.Outputs.LoadBalancer','/index.html']]
