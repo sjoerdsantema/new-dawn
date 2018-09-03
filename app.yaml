@@ -90,15 +90,31 @@ Resources:
               - codecommit:Get*
               - codecommit:GitPull
               - codecommit:List*
-            Resource: "*"
-          - Effect: Allow
-            Action:
+              - autoscaling:*
+              - codedeploy:*
+              - ec2:*
+              - elasticloadbalancing:*
+              - iam:AddRoleToInstanceProfile
+              - iam:CreateInstanceProfile
+              - iam:CreateRole
+              - iam:DeleteInstanceProfile
+              - iam:DeleteRole
+              - iam:DeleteRolePolicy
+              - iam:GetInstanceProfile
+              - iam:GetRole
+              - iam:GetRolePolicy
+              - iam:ListInstanceProfilesForRole
+              - iam:ListRolePolicies
+              - iam:ListRoles
+              - iam:PassRole
+              - iam:PutRolePolicy
+              - iam:RemoveRoleFromInstanceProfile
+              - s3:*
+              - s3:GetObject
+              - s3:List*
+              - s3:Get*
               - elasticloadbalancing:DescribeInstanceHealth
             Resource: "*"
-          - Effect: Allow
-            Action:
-              - s3:GetObject
-            Resource: arn:aws:s3:::one-sentia-course/*
       Roles:
         - !Ref EC2Role
   LoadBalancer: #spawn a load balancer
@@ -181,7 +197,25 @@ Resources:
                 triggers=post.update
                 path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init
                 action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
-                runas=root
+                runas=root\
+            /home/ec2-user/codedeployinstall:
+              group: root
+              mode: '000755'
+              owner: root
+              source:
+                !Join [ "", [ "http://aws-codedeploy-", !Ref "AWS::Region",".s3.amazonaws.com/latest/install" ] ]
+            /home/ec2-user/codedeployinstallpt2:
+              content: !Sub |
+                #!/bin/bash
+                yes|/home/ubuntu/codedeployinstall auto
+              group: root
+              mode: '000755'
+              owner: root
+          commands:
+            command1:a
+              command: /home/ec2-user/codedeployinstallpt2
+            command2:
+              command: rm /var/www/html/index.html
           services:
             sysvinit:
               cfn-hup:
@@ -198,6 +232,7 @@ Resources:
               httpd:
                 enabled: 'true'
                 ensureRunning: 'true'
+
     Properties:
       AssociatePublicIpAddress: false
       IamInstanceProfile: !Ref EC2Profile
