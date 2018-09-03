@@ -86,6 +86,6 @@ Outputs:
     Value:
      !GetAtt 'SkeletonStack.Outputs.SNatGateway'
   LoadBalancerEndpoint:
-    Description: Endpoint of the load Balancer
+    Description: Endpoint of the load Balancer (http)
     Value:
-      !GetAtt 'AppStack.Outputs.LoadBalancer'
+      !Join ['http://',!GetAtt 'AppStack.Outputs.LoadBalancer','/index.html']
