@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: EC2/application template for Sentia Academy
 Parameters:
+  Repository:
+    Description: Remote repository with application files
+    Type: String
   BastionSubnet:
     Description: Bastion Subnet
     Type: String
@@ -209,9 +212,7 @@ Resources:
           yum install -y aws-cfn-bootstrap
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource AsgLaunchConfiguration --configsets full_install --region ${AWS::Region}
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
-          git config --global credential.helper '!aws --profile CodeCommitProfile codecommit credential-helper $@'
-          git config --global credential.UseHttpPath true
-          git clone https://git-codecommit.us-east-2.amazonaws.com/v1/repos/sentia-course /var/www/html
+          git clone ${Repository} /var/www/html
       PlacementTenancy: default
       SecurityGroups:
         - !Ref AutoScalingSecurityGroup
