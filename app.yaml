@@ -45,10 +45,10 @@ Mappings:
     Small:
       "EC2": "t2.micro"
       "DB": "db.t2.micro"
-    Medium:
+    Expensive:
       "EC2": "db.t2.small"
       "DB": "db.t2.small"
-    Large:
+    Mega:
       "EC2": "db.t2.medium"
       "DB": "db.t2.medium"
 Resources:

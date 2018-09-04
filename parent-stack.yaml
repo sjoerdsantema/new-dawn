@@ -12,8 +12,8 @@ Parameters:
     Default: "Small"
     AllowedValues:
      - Small
-     - Medium
-     - Large
+     - Expensive
+     - Mega
     Description: Select sizing
   Ami:
     Type: String
@@ -53,6 +53,7 @@ Resources:
       Ami: !Ref Ami
     TimeoutInMinutes: 60
 Outputs:
+  Sizing: !Ref Sizing
   SVPC:
    Description: VpcId SkeletonStack
    Value:
