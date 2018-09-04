@@ -71,20 +71,14 @@ Resources:
             Action:
               - sts:AssumeRole
       Path: "/"
-  EC2Policy: #create ec2 policy with some relics from previous assignments
+  EC2Policy: #create ec2 policy
     Type: AWS::IAM::Policy
     Properties:
       PolicyName: EC2Policy
       PolicyDocument:
         Statement:
           - Effect: Allow
-            Action: #needs some serious slashing
-              - cloudwatch:PutMetricdata
-              - logs:PutLogEvents
-              - logs:DescribeLogStreams
-              - logs:DescribeLogGroups
-              - logs:CreateLogStreams
-              - logs:CreateLogGroup
+            Action:
               - codecommit:BatchGetRepositories
               - codecommit:Get*
               - codecommit:GitPull
@@ -112,7 +106,7 @@ Resources:
             Resource: "*"
       Roles:
         - !Ref EC2Role
-  LoadBalancer: #spawn a load balancer
+  LoadBalancer: #spawn an application load balancer
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Scheme: internet-facing
@@ -254,12 +248,9 @@ Resources:
         - !Ref AutoScaling2Subnet
       Tags:
         - Key: Name
-          Value: New Dawn - Webserver
+          Value: New Dawn-Webserver
           PropagateAtLaunch: true
 Outputs:
-  BastionHost:
-    Description: Bastion created in skeleton
-    Value: !Ref BastionHostScalingGroup
   LoadBalancer:
     Description: Endpoint of load balancer
     Value: !GetAtt 'LoadBalancer.DNSName'
