@@ -31,7 +31,7 @@ Parameters:
   KeyName:
     Description: Keyname to use
     Type: String
-  Ami:
+  Ami: # add mapping for different regions; ami differs per region!
     Description: Selected Ami from parent-stack
     Type: String
   Vpc:
@@ -230,10 +230,12 @@ Resources:
   CPUAlarmHigh:
    Type: AWS::CloudWatch::Alarm
    Properties:
+     AlarmDescription: Alarm if CPU too high or metric disappears indicating instance is down
      EvaluationPeriods: '1'
      Statistic: Average
+     MetricName: CPUUtilization
      Threshold: '50'
-     AlarmDescription: Alarm if CPU too high or metric disappears indicating instance is down
+     ComparisonOperator: GreaterThanThreshold
      Period: '60'
      AlarmActions:
       - !Ref ScaleUpPolicy
@@ -241,8 +243,6 @@ Resources:
      Dimensions:
       - Name: AutoScalingGroup
         Value: !Ref AutoScalingGroup
-     ComparisonOperator: GreaterThanThreshold
-     MetricName: CPUUtilization
   ScaleUpPolicy: #scaling policy
    Type: AWS::AutoScaling::ScalingPolicy
    Properties:
@@ -250,11 +250,12 @@ Resources:
      AutoScalingGroupName: !Ref AutoScalingGroup
      Cooldown: '1'
      ScalingAdjustment: '1'
+#     PolicyType: TargetTrackingScaling
   AutoScalingGroup: #spawn auto-scaling group
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT10M
         Count: '2'
     UpdatePolicy:
       AutoScalingRollingUpdate:
