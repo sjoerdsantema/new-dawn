@@ -232,8 +232,9 @@ Resources:
    Properties:
      AlarmDescription: Alarm if CPU too high or metric disappears indicating instance is down
      EvaluationPeriods: '1'
-     Statistic: Average
+     ExtendedStatistic: p50
      MetricName: CPUUtilization
+     EvaluateLowSampleCountPercentile: evaluate
      Threshold: '50'
      ComparisonOperator: GreaterThanThreshold
      Period: '60'
