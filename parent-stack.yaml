@@ -17,12 +17,17 @@ Parameters:
     Description: Select sizing
   Ami:
     Type: String
-    Default: ami-40142d25 #this ami is only available in us-east-2 under this number! consider using mapping 
+    Default: ami-40142d25 #this ami is only available in us-east-2 under this number! consider using mapping
 Resources:
  SkeletonStack:
   Type: AWS::CloudFormation::Stack
   Properties:
     TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/new-dawn/skeleton.yaml
+    TimeoutInMinutes: 60
+ AlarmStack:
+  Type: AWS::CloudFormation::Stack
+  Properties:
+    TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/new-dawn/alarms.yaml
     TimeoutInMinutes: 60
  AppStack:
   Type: AWS::CloudFormation::Stack
