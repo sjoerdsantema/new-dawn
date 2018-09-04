@@ -80,7 +80,6 @@ Resources:
           - Effect: Allow
             Action: #needs some serious slashing
               - cloudwatch:PutMetricdata
-              - ec2:DescribeTags
               - logs:PutLogEvents
               - logs:DescribeLogStreams
               - logs:DescribeLogGroups
@@ -110,18 +109,6 @@ Resources:
               - iam:PutRolePolicy
               - iam:RemoveRoleFromInstanceProfile
               - s3:*
-              - s3:GetObject
-              - s3:List*
-              - s3:Get*
-              - elasticloadbalancing:DescribeInstanceHealth
-              - elasticloadbalancing:DescribeLoadBalancers
-              - elasticloadbalancing:DescribeInstanceHealth
-              - elasticloadbalancing:RegisterInstancesWithLoadBalancer
-              - elasticloadbalancing:DeregisterInstancesFromLoadBalancer
-              - elasticloadbalancing:DescribeTargetGroups
-              - elasticloadbalancing:DescribeTargetHealth
-              - elasticloadbalancing:RegisterTargets
-              - elasticloadbalancing:DeregisterTargets
             Resource: "*"
       Roles:
         - !Ref EC2Role
