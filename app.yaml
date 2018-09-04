@@ -32,7 +32,7 @@ Parameters:
     Description: Keyname to use
     Type: String
   Ami:
-    Description: Selected Ami from SkeletonStack
+    Description: Selected Ami from parent-stack
     Type: String
   Vpc:
     Description: Vpc from Skeleton Stack
@@ -198,6 +198,7 @@ Resources:
             yum:
               httpd: []
               git: []
+              stress: []
           services:
             sysvinit:
               httpd:
