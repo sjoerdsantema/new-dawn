@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Parent stack with nested stacks for networking, ec2 and app; no database; deployments through CodePipeline en CodeDeploy; commit is parameter
+Description: Parent Stack with nested stacks for networking, ec2 and app; no database; deployments through CodePipeline en CodeDeploy; commit is parameter
 Parameters:
   Repository: #link to repository where application is stored
     Type: String
