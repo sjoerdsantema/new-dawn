@@ -5,7 +5,7 @@ Parameters:
     Type: String
     Default: "http://github.com/sjoerdsantema/loremipsum"
   KeyName:
-    Type: String
+    Type: AWS::EC2::KeyPair::KeyName
     Default: trainingdays
   Sizing: #added so sizing can easily be changed when needed
     Type: String
