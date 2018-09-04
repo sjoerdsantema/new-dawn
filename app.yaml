@@ -78,7 +78,7 @@ Resources:
       PolicyDocument:
         Statement:
           - Effect: Allow
-            Action:
+            Action: #needs some serious slashing
               - cloudwatch:PutMetricdata
               - ec2:DescribeTags
               - logs:PutLogEvents
