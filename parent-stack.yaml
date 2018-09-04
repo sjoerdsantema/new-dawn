@@ -53,7 +53,6 @@ Resources:
       Ami: !Ref Ami
     TimeoutInMinutes: 60
 Outputs:
-  Sizing: !Ref Sizing
   SVPC:
    Description: VpcId SkeletonStack
    Value:
