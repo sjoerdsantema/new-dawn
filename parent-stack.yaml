@@ -24,10 +24,10 @@ Resources:
   Properties:
     TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/new-dawn/skeleton.yaml
     TimeoutInMinutes: 60
- AlarmStack:
+ BaseStack:
   Type: AWS::CloudFormation::Stack
   Properties:
-    TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/new-dawn/alarms.yaml
+    TemplateURL: https://s3-eu-west-1.amazonaws.com/one-sentia-course/CFNTemplates/new-dawn/base-stack.yaml
     TimeoutInMinutes: 60
  AppStack:
   Type: AWS::CloudFormation::Stack

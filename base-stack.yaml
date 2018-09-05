@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Set an alarm in case things break the bank
+Resources:
+ SpendingAlarm:
+  Type: AWS::CloudWatch::Alarm
+  Properties:
+    AlarmDescription: "Alarm if spending is over 50USD this month"
+    Namespace: AWS/Billing
+    MetricName: EstimatedCharges
+    Dimensions:
+    - Name: Currency
+      Value: USD
+    Statistic: Maximum
+    Period: '21600'
+    EvaluationPeriods: '1'
+    Threshold: 50
+    ComparisonOperator: GreaterThanThreshold
+    AlarmActions:
+     - !Ref AlarmTopic
+    InsufficientDataActions:
+     - !Ref AlarmTopic
+ AlarmTopic:
+  Type: AWS::SNS::Topic
+  Properties:
+    Subscription:
+      - Endpoint: "sjoerdsantema@gmail.com"
+        Protocol: 'email'
+    TopicName: "BillingAlert"

@@ -230,14 +230,14 @@ Resources:
   CPUAlarmHigh:
    Type: AWS::CloudWatch::Alarm
    Properties:
-     AlarmDescription: Alarm if CPU too high or metric disappears indicating instance is down
+     AlarmDescription: Alarm if CPU is over 50% for more then 60 seconds
      EvaluationPeriods: '1'
-     ExtendedStatistic: p50
+     Period: '60'
+   # ExtendedStatistic: p50
      MetricName: CPUUtilization
      EvaluateLowSampleCountPercentile: evaluate
      Threshold: '50'
      ComparisonOperator: GreaterThanThreshold
-     Period: '60'
      AlarmActions:
       - !Ref ScaleUpPolicy
      Namespace: AWS/EC2
@@ -251,7 +251,6 @@ Resources:
      AutoScalingGroupName: !Ref AutoScalingGroup
      Cooldown: '1'
      ScalingAdjustment: '1'
-#     PolicyType: TargetTrackingScaling
   AutoScalingGroup: #spawn auto-scaling group
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy:
