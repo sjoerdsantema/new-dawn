@@ -228,29 +228,34 @@ Resources:
       SecurityGroups:
         - !Ref AutoScalingSecurityGroup
   CPUAlarmHigh:
-   Type: AWS::CloudWatch::Alarm
-   Properties:
-     AlarmDescription: Alarm if CPU is over 50% for more then 60 seconds
-     EvaluationPeriods: '1'
-     Period: '60'
-   # ExtendedStatistic: p50
-     MetricName: CPUUtilization
-     EvaluateLowSampleCountPercentile: evaluate
-     Threshold: '50'
-     ComparisonOperator: GreaterThanThreshold
-     AlarmActions:
-      - !Ref ScaleUpPolicy
-     Namespace: AWS/EC2
-     Dimensions:
-      - Name: AutoScalingGroup
-        Value: !Ref AutoScalingGroup
-  ScaleUpPolicy: #scaling policy
-   Type: AWS::AutoScaling::ScalingPolicy
-   Properties:
-     AdjustmentType: ChangeInCapacity
-     AutoScalingGroupName: !Ref AutoScalingGroup
-     Cooldown: '1'
-     ScalingAdjustment: '1'
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm if CPU is over 50% for more then 60 seconds
+      EvaluationPeriods: 1
+      Period: 60
+    # ExtendedStatistic: p50
+      MetricName: CPUUtilization
+      EvaluateLowSampleCountPercentile: evaluate
+      Threshold: 50.0
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref ScaleUpPolicy
+      Namespace: AWS/EC2
+      Dimensions:
+        - Name: AutoScalingGroup
+          Value: !Ref AutoScalingGroup
+  ScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      Cooldown: 120
+      MetricAggregationType: Average
+      PolicyType: TargetTrackingScaling
+      PreDefinedMetricSpecification:
+        PredefinedMetricType: ASGAverageCPUUtilization
+      TargetTrackingConfiguration:
+        TargetValue: 50.0
   AutoScalingGroup: #spawn auto-scaling group
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy:

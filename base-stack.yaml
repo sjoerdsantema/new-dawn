@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Set an alarm in case things break the bank
+Description: Non-critical parts like codepipeline, alerts, etc.
 Resources:
- SpendingAlarm:
+ SpendingAlarm: #prevent things breaking the bank
   Type: AWS::CloudWatch::Alarm
   Properties:
     AlarmDescription: "Alarm if spending is over 50USD this month"
