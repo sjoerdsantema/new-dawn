@@ -253,9 +253,10 @@ Resources:
       MetricAggregationType: Average
       PolicyType: TargetTrackingScaling
       TargetTrackingConfiguration:
-        TargetValue: 50.0
-        PreDefinedMetricSpecification:
+        PredefinedMetricSpecification:
           PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 50.0
+Required: Conditional. This pro
   AutoScalingGroup: #spawn auto-scaling group
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy:
