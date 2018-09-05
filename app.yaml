@@ -252,10 +252,10 @@ Resources:
       Cooldown: 120
       MetricAggregationType: Average
       PolicyType: TargetTrackingScaling
-      PreDefinedMetricSpecification:
-        PredefinedMetricType: ASGAverageCPUUtilization
       TargetTrackingConfiguration:
         TargetValue: 50.0
+        PreDefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
   AutoScalingGroup: #spawn auto-scaling group
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy:
