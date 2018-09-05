@@ -25,4 +25,3 @@ Resources:
     Subscription:
       - Endpoint: "sjoerdsantema@gmail.com"
         Protocol: 'email'
-    TopicName: "ThingsAreBreakingTheBank"
